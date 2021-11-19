@@ -86,11 +86,12 @@ day19 <- ggplot(can) +
     label.position = "bottom",
     title.position = "top",
     keyheight = 1,
+    keywidth = 1,
     nrow = 1,
   )) +
   theme(
-    text = element_text(family = "lobster"),
-    rect = element_rect(fill = "#d3e6f5"),
+    text = element_text(family = "lobster", size=20),
+    rect = element_rect(fill = "#d3e6f5", colour = "#d3e6f5"),
     panel.grid = element_blank(),
     plot.title = element_text(face = "bold"),
     panel.background = element_rect(fill = "#d3e6f5"),
@@ -113,4 +114,6 @@ day19 <- ggplot(can) +
     )
   )
 
+ggsave("2021/day19_islands.png", width = 7, height = 4.6)
 
+ggs

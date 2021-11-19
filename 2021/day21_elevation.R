@@ -4,8 +4,19 @@ library(elevatr)
 library(rayshader)
 library(raster)
 library(dplyr)
+library(ggplot2)
+
+sysfonts::font_add("Pacifico",
+  regular = "2021/Pacifico-Regular.ttf"
+)
+
+
+zoom <- 12
+
+# Get La Palma bbox----
 
 palma <- esp_get_nuts(region = "ES707", moveCAN = FALSE, epsg = 4326)
+
 
 square_bbox <- function(x, expand = .1) {
   bbx <- st_bbox(st_transform(x, 3857))
@@ -40,7 +51,12 @@ cent <- st_coordinates(square)
 
 sq <- st_sf(d = 1, square) %>% as_Spatial()
 
-DEM <- get_elev_raster(sq, z = 12, clip = "bbox", override_size_check = TRUE) %>%
+# Get DEM ----
+
+DEM <- get_elev_raster(sq,
+  z = zoom, clip = "bbox",
+  override_size_check = TRUE
+) %>%
   crop(extent(sq))
 
 
@@ -52,19 +68,19 @@ if (maxR > 1000) {
   DEM <- aggregate(DEM, fact = max(2, round(maxR / 1000)))
 }
 dim(DEM)
-
 # Assign min to 0 - It's sea on this DEM provider
-DEM[is.na(DEM)] <- 0
+DEM[is.na(DEM)] <- -0
 DEM[values(DEM) < 0] <- 0
 
-overlay_raster <- esp_getTiles(st_sf(d = 1, square), type = "PNOA", zoom = 12, verbose = TRUE)
+overlay_raster <- esp_getTiles(st_sf(d = 1, square), type = "PNOA", zoom = zoom, verbose = TRUE)
 
-terra::plotRGB(overlay_raster)
 
 tmppng <- tempfile(fileext = ".png")
 
 DEM <- crop(DEM, raster(overlay_raster))
 
+
+# Plot and save layer as png ----
 
 # Convert to png
 png(tmppng,
@@ -77,6 +93,9 @@ dev.off()
 
 img_overlay <- png::readPNG(tmppng)
 
+
+
+# Parameters for rayshader and movie ----
 
 # Correction to zscale
 fact <-
@@ -146,13 +165,15 @@ phi_val1 <-
 phi_val <- c(phi_val1, rep(10, n_frames / 3), rev(phi_val1))
 
 zoom_val <- transition_values(
-  from = 0.9,
+  from = 1,
   to = .2,
   steps = n_frames,
   one_way = FALSE,
   type = "cos"
 )
 
+
+# Rayshade! ----
 sub <- "Canary Islands, Spain"
 title <- "Isla de La Palma"
 
@@ -165,17 +186,16 @@ foot <- paste0(
 
 DEM_mat <- raster_to_matrix(DEM)
 
+
+
+rgl::rgl.close()
+
+
 DEM_mat %>%
   sphere_shade(texture = "desert") %>%
   add_overlay(img_overlay) %>%
   plot_3d(DEM_mat, zscale = 1 + fact / 1, baseshape = "circle")
 
-
-library(showtext)
-
-font_add_google("Acme", "acme")
-
-showtext_auto()
 
 # Render mp4
 render_movie(
@@ -183,7 +203,7 @@ render_movie(
   title_text = title,
   title_position = "north",
   title_size = 16,
-  title_font = "acme",
+  title_font = "Pacifico",
   type = "custom",
   frames = n_frames,
   fps = 30,
