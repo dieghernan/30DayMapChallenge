@@ -5,13 +5,16 @@ library(rayshader)
 library(raster)
 library(dplyr)
 library(ggplot2)
+library(nominatimlite)
+library(sysfonts)
 
-sysfonts::font_add("Pacifico",
+sysfonts::font_add("pacifico",
   regular = "2021/Pacifico-Regular.ttf"
 )
 
-
 zoom <- 12
+
+lava <- nominatimlite::geo_address_lookup_sf("13249829", type = "R", points_only = FALSE)
 
 # Get La Palma bbox----
 
@@ -68,9 +71,9 @@ if (maxR > 1000) {
   DEM <- aggregate(DEM, fact = max(2, round(maxR / 1000)))
 }
 dim(DEM)
-# Assign min to 0 - It's sea on this DEM provider
-DEM[is.na(DEM)] <- -0
-DEM[values(DEM) < 0] <- 0
+# Assign min to -10 - It's sea on this DEM provider
+DEM[is.na(DEM)] <- -10
+DEM[values(DEM) < -10] <- -10
 
 overlay_raster <- esp_getTiles(st_sf(d = 1, square), type = "PNOA", zoom = zoom, verbose = TRUE)
 
@@ -89,6 +92,9 @@ png(tmppng,
 )
 par(mar = c(0, 0, 0, 0))
 plotRGB(overlay_raster)
+plot(st_geometry(lava), add = TRUE, col=adjustcolor("red", alpha.f =
+                                                      0.7),
+     border = "red2", lwd=2)
 dev.off()
 
 img_overlay <- png::readPNG(tmppng)
@@ -104,7 +110,7 @@ fact <-
 
 # mp4 config
 
-n_frames <- 360
+n_frames <- 360*2
 
 transition_values <- function(from,
                               to,
@@ -165,17 +171,25 @@ phi_val1 <-
 phi_val <- c(phi_val1, rep(10, n_frames / 3), rev(phi_val1))
 
 zoom_val <- transition_values(
-  from = 1,
+  from = .9,
   to = .2,
-  steps = n_frames,
-  one_way = FALSE,
-  type = "cos"
+  steps = 180*2,
+  one_way = TRUE,
+  type = "lin"
 )
-
+zoom_val
+zoom_val <- c(zoom_val, rep(.2, 120*2),
+              transition_values(
+                from = .2,
+                to = .9,
+                steps = 60*2,
+                one_way = TRUE,
+                type = "lin"
+              ))
 
 # Rayshade! ----
 sub <- "Canary Islands, Spain"
-title <- "Isla de La Palma"
+title <- "Cumbre Vieja volcanic eruption\nLava flow"
 
 foot <- paste0(
   "Infraestructura de Datos Espaciales de Espa\u00f1a (IDEE)"
@@ -194,7 +208,8 @@ rgl::rgl.close()
 DEM_mat %>%
   sphere_shade(texture = "desert") %>%
   add_overlay(img_overlay) %>%
-  plot_3d(DEM_mat, zscale = 1 + fact / 1, baseshape = "circle")
+  plot_3d(DEM_mat, zscale = 1 + fact / 1, baseshape = "circle",
+          water = FALSE)
 
 
 # Render mp4
@@ -203,7 +218,7 @@ render_movie(
   title_text = title,
   title_position = "north",
   title_size = 16,
-  title_font = "Pacifico",
+  title_font = "pacifico",
   type = "custom",
   frames = n_frames,
   fps = 30,
@@ -213,4 +228,5 @@ render_movie(
   progbar = TRUE
 )
 
+render_m
 rgl::rgl.close()
