@@ -9,7 +9,7 @@ See https://github.com/tjukanovt/30DayMapChallenge
 
 ### Day 19: Islands
 
-![](https://github.com/dieghernan/30DayMapChallenge/blob/main/2021/day19_islands.png)
+![](/2021/day19_islands.png)
 
 ### Day 21: Elevation
 
@@ -17,4 +17,4 @@ https://user-images.githubusercontent.com/25656809/142779862-3d7bfb57-5177-4ea0-
 
 ### Day 22: Boundaries
 
-![](https://github.com/dieghernan/30DayMapChallenge/blob/main/2021/day22_boundaries.png)
+![](2021/day22_boundaries.png)
