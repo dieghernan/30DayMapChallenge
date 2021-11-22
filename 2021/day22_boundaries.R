@@ -71,22 +71,27 @@ noholes <- sfheaders::sf_remove_holes(newccaa_pol)
 noholes$type <-"New"
 oldccaa$type <- "Current"
 
-oldcc
+oldccaa <- oldccaa %>%
+  left_join(esp_codelist %>% select(ccaa.shortname.es, codauto))
 
 all <- oldccaa %>% bind_rows(noholes)
 
 library(showtext)
-font_add(family = "pacifico", regular = "./2021/Pacifico-Regular.ttf")
+font_add(family = "ibarra", regular = "./2021/IbarraRealNova-Regular.ttf",
+         bold = "./2021/IbarraRealNova-Bold.ttf",
+         italic = "./2021/IbarraRealNova-Italic.ttf",
+         bolditalic = "./2021/IbarraRealNova-BoldItalic.ttf")
 showtext_auto()
 
 
-ggplot(all) +
-  geom_sf(aes(fill=ccaa.shortname.es), col="grey20") +
+end <- ggplot(all) +
+  geom_sf(aes(fill=ccaa.shortname.es), col="grey20",
+          size=0.15, linetype = "dotted") +
   scale_fill_manual(values=
                       adjustcolor(
                       pals::brewer.paired(15),
                       alpha.f = 0.95)) +
-  theme_void() +
+  theme_minimal() +
   facet_wrap(vars(type))  +
   guides(fill=guide_legend(direction = "horizontal",
                            title.position = "top",
@@ -95,8 +100,18 @@ ggplot(all) +
        subtitle = "Internal boundaries of Spain",
        fill="Autonomous Communities") +
   theme(legend.position = "bottom",
-        text = element_text(family = "pacifico"))
+        text = element_text(family = "ibarra"),
+        title = element_text(size = 30, face = "bold"),
+         plot.subtitle = element_text(size=25),
+        legend.text = element_text(size = 20),
+        panel.grid = element_line(size=0.3),
+        strip.text = element_text(size=22),
+        axis.text = element_text(size=18))
 
+end
+
+ggsave("2021/day22_boundaries.png",end, dpi=300, width = 7, height = 5,
+       bg="white")
 
 ggplot(noholes) +
   geom_sf(aes(fill=ccaa.shortname.es), col="grey10") +
@@ -112,3 +127,9 @@ ggplot(oldccaa) +
   scale_fill_manual(values=pals::brewer.paired(15)) +
   theme_void()
 
+## Annex: Voronoi with capitals
+
+cents_mun <- esp_get_capimun() %>% st_transform(3857)
+
+# Capitals
+cents_mun2 <- cents_mun %>% filter(name %in% unique(cc))
