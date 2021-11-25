@@ -67,7 +67,7 @@ showtext_auto()
 # Plot Canary Islands
 day19 <- ggplot(can) +
   geom_sf(aes(fill = as.factor(val_inf)),
-          color = NA
+    color = NA
   ) +
   coord_sf(
     xlim = c(-18.6, -13),
@@ -90,7 +90,7 @@ day19 <- ggplot(can) +
     nrow = 1,
   )) +
   theme(
-    text = element_text(family = "lobster", size=20),
+    text = element_text(family = "lobster", size = 20),
     rect = element_rect(fill = "#d3e6f5", colour = "#d3e6f5"),
     panel.grid = element_blank(),
     plot.title = element_text(face = "bold"),

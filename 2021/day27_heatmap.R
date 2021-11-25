@@ -73,4 +73,3 @@ ggsave("2021/day27_heatmap.png", p,
   height = 8, width = 8, dpi = 300,
   bg = "white"
 )
-

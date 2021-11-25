@@ -92,9 +92,13 @@ png(tmppng,
 )
 par(mar = c(0, 0, 0, 0))
 plotRGB(overlay_raster)
-plot(st_geometry(lava), add = TRUE, col=adjustcolor("red", alpha.f =
-                                                      0.7),
-     border = "red2", lwd=2)
+plot(st_geometry(lava),
+  add = TRUE, col = adjustcolor("red",
+    alpha.f =
+      0.7
+  ),
+  border = "red2", lwd = 2
+)
 dev.off()
 
 img_overlay <- png::readPNG(tmppng)
@@ -110,7 +114,7 @@ fact <-
 
 # mp4 config
 
-n_frames <- 360*2
+n_frames <- 360 * 2
 
 transition_values <- function(from,
                               to,
@@ -173,19 +177,21 @@ phi_val <- c(phi_val1, rep(10, n_frames / 3), rev(phi_val1))
 zoom_val <- transition_values(
   from = .9,
   to = .2,
-  steps = 180*2,
+  steps = 180 * 2,
   one_way = TRUE,
   type = "lin"
 )
 zoom_val
-zoom_val <- c(zoom_val, rep(.2, 120*2),
-              transition_values(
-                from = .2,
-                to = .9,
-                steps = 60*2,
-                one_way = TRUE,
-                type = "lin"
-              ))
+zoom_val <- c(
+  zoom_val, rep(.2, 120 * 2),
+  transition_values(
+    from = .2,
+    to = .9,
+    steps = 60 * 2,
+    one_way = TRUE,
+    type = "lin"
+  )
+)
 
 # Rayshade! ----
 sub <- "Canary Islands, Spain"
@@ -208,8 +214,10 @@ rgl::rgl.close()
 DEM_mat %>%
   sphere_shade(texture = "desert") %>%
   add_overlay(img_overlay) %>%
-  plot_3d(DEM_mat, zscale = 1 + fact / 1, baseshape = "circle",
-          water = FALSE)
+  plot_3d(DEM_mat,
+    zscale = 1 + fact / 1, baseshape = "circle",
+    water = FALSE
+  )
 
 
 # Render mp4

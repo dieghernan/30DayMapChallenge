@@ -166,18 +166,22 @@ cents_mun2 <- cents_mun %>% filter(name == ine.prov.name)
 
 # Get missing cents
 cents_mun3 <- cents_mun %>% filter(name %in%
-                                     c("A Coruña",
-                                       "Oviedo/Uviéu",
-                                       "Logroño",
-                                       "Santander",
-                                       "Vitoria-Gasteiz",
-                                       "Bilbao",
-                                       "Donostia/San Sebastián",
-                                       "Pamplona/Iruña",
-                                       "València",
-                                       "Castelló de la Plana"))
+  c(
+    "A Coruña",
+    "Oviedo/Uviéu",
+    "Logroño",
+    "Santander",
+    "Vitoria-Gasteiz",
+    "Bilbao",
+    "Donostia/San Sebastián",
+    "Pamplona/Iruña",
+    "València",
+    "Castelló de la Plana"
+  ))
 
-cents_munend <- cents_mun2 %>% bind_rows(cents_mun3) %>% arrange(codauto, cpro)
+cents_munend <- cents_mun2 %>%
+  bind_rows(cents_mun3) %>%
+  arrange(codauto, cpro)
 
 
 
@@ -235,8 +239,8 @@ all2$type <- factor(all2$type, levels = c("Current", "Centroid: Capital"))
 
 end2 <- ggplot(all2) +
   geom_sf(aes(fill = ccaa.shortname.es),
-          col = "grey20",
-          size = 0.15, linetype = "dotted"
+    col = "grey20",
+    size = 0.15, linetype = "dotted"
   ) +
   scale_fill_manual(
     values =
@@ -271,8 +275,6 @@ end2 <- ggplot(all2) +
 end2
 
 ggsave("2021/day22_boundaries_alt.png", end2,
-       dpi = 300, width = 7, height = 5,
-       bg = "white"
+  dpi = 300, width = 7, height = 5,
+  bg = "white"
 )
-
-
