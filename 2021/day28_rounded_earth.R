@@ -15,7 +15,7 @@ library(ggspatial)
 
 # Get flights ----
 airports <- geo_lite_sf(c(
-  "Heathrow Airport",
+  "London Airport",
   "Singapore Airport",
   "Auckland Airport",
   "Nadi Airport",
@@ -55,12 +55,21 @@ coast <- st_as_s2(gisco_get_coastallines(epsg = 4326, resolution = 3))
 ant <- st_as_s2(gisco_get_countries(country = "Antarctica", epsg = 4326, resolution = 3))
 grat <- st_graticule(ndiscr = 300)
 
+# Dateline
+
+dateline <- st_graticule(
+  x = c(-180, -90, -180, 90),
+  crs = st_crs(4326), ndiscr = 300
+)
+
 
 # Background
 b <- s2_buffer_cells(as_s2_geography("POINT(150 -10)"), 9800000) # visible half
 coast_v <- s2_intersection(b, coast) # visible coastallines
 ant_v <- s2_intersection(b, ant)
 grat_v <- s2_intersection(b, grat)
+dateline_v <- s2_intersection(b, dateline)
+
 
 # Proj
 proj4 <- "+proj=ortho +lat_0=-10 +lon_0=150"
@@ -80,9 +89,26 @@ grat_end <- grat_v %>%
   st_as_sfc() %>%
   st_transform(proj4)
 
+dateline_end <- dateline_v %>%
+  st_as_sfc() %>%
+  st_transform(proj4)
+
+
 
 # Select only lines from graticule
 grat_end <- grat_end[!st_is_empty(grat_end)]
+
+
+
+l <- st_sfc(
+  st_linestring(rbind(c(180, 90), c(180, -90))),
+  crs = st_crs(proj4)
+) %>%
+  st_transform(3857) %>%
+  st_segmentize(100) %>%
+  st_transform(4326)
+
+
 
 # Tile
 
@@ -140,6 +166,14 @@ scale_df <- data.frame(
   yend = -bbox_marble[3] * 1.3
 )
 
+# Label dateline
+lab_dateline <- st_coordinates(dateline_end) %>%
+  as.data.frame() %>%
+  arrange(desc(Y))
+lab_dateline_end <- lab_dateline[as.integer(nrow(lab_dateline) * 0.27), ]
+lab_dateline_end$text <- "International Date Line"
+
+
 
 # Plot----
 
@@ -162,40 +196,49 @@ p <- ggplot(b_end) +
     aes(x = x, y = y, yend = yend, xend = xend), lineend = "round"
   ) +
   geom_point(data = scale_point_labs_df, aes(x = X, y = Y), color = "#0033ff", shape = 21, fill = "#ccd6ff", size = 5, alpha = 0.4) +
-  geom_text_repel(
+  geom_text(
     data = scale_point_labs_df, aes(
-      x = X, y = Y, label = cities,
+      x = X, y = Y, label = IATA,
       family = "skyfont",
       hjust = 0.5
     ),
     size = 23,
     nudge_y = 450000,
-    color = "white",
-    seed = 1234
+    color = "white"
   ) +
   geom_text_repel(
-    data = scale_point_labs_df, aes(X, Y, label = dist),
-    nudge_y = -450000,
+    data = scale_point_labs_df, aes(X, Y * 1.07,
+                                    label = dist,
+                                    segment.color = "transparent"
+    ),
     size = 10, color = "white",
     direction = "y",
-    seed = 1234
+    seed = 3
   ) +
   # Background
   geom_sf(fill = "#05050f", col = "grey20", size = 1) +
+  geom_sf(data = ant_end, fill = "#2a3354", col = NA) +
   # Tile
   layer_spatial(tile_end) +
   #  geom_sf(data=coast_end, fill=NA, col=adjustcolor("grey90", alpha.f = 0.5)) +
   # Graticules
   geom_sf(data = grat_end, color = "white", alpha = 0.1, size = 0.3) +
+  geom_sf(data = dateline, color = "yellow", alpha = 0.3, size = 1, linetype = "dotted") +
   # Flighs
   geom_sf(data = lines_end, color = "#0033ff", alpha = .5, size = 4) +
   geom_sf(data = labs_end, color = "#0033ff", shape = 21, fill = "#ccd6ff", size = 5, alpha = 0.4) +
   geom_sf_text(
-    data = labs_end, aes(label = IATA, family = "skyfont"), size = 25,
+    data = labs_end, aes(label = cities, family = "skyfont"), size = 20,
     color = "white",
-    nudge_y = 400000
+    nudge_y = 600000
   ) +
-  geom_sf(data = ant_end, fill = "#2a3354", col = NA) +
+  geom_text(
+    data = lab_dateline_end, aes(X, Y, label = text),
+    color = "yellow", size = 9, alpha = 0.5,
+    hjust = 1,
+    nudge_x = -100000,
+    angle = -2
+  ) +
   theme_void() +
   theme(
     text = element_text(
@@ -203,26 +246,24 @@ p <- ggplot(b_end) +
       size = 30
     ),
     plot.title = element_text(
-      size = 80, face = "bold",
+      size = 100,
       hjust = .5
     ),
     plot.subtitle = element_text(
-      size = 70, face = "bold",
+      size = 80,
       hjust = .5,
       margin = margin(b = 5)
     ),
     plot.background = element_rect(fill = "black")
   ) +
   labs(
-    title = " Flight Plan: London - Auckland - L.A.",
-    subtitle = "Stops on Singapore and Fiyi",
+    title = "Flight Plan: London-Auckland-L.A",
+    subtitle = "Stops: Singapore-Fiyi",
     caption = "My honeymoon destinations"
   )
 
 
 
-ggsave("2021/28_rounded_earth.png", p,
+ggsave("2021/day28_rounded_earth.png", p,
        height = 9, width = 8, dpi = 300, bg = "black"
 )
-
-
