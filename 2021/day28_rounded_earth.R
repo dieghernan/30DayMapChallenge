@@ -37,9 +37,9 @@ air2 <- airports[2:5, ] %>% as("Spatial")
 
 
 lines <- gcIntermediate(air1, air2,
-                        sp = TRUE,
-                        addStartEnd = TRUE, n = 100,
-                        breakAtDateLine = FALSE
+  sp = TRUE,
+  addStartEnd = TRUE, n = 100,
+  breakAtDateLine = FALSE
 )
 
 lines_sf <- st_union(st_as_sf(lines))
@@ -181,8 +181,8 @@ library(showtext)
 
 font_add("skyfont", regular = "2021/Skyfont-NonCommercial.ttf")
 font_add("freesans",
-         regular = "2021/FreeSans.ttf",
-         bold = "2021/FreeSansBold.ttf"
+  regular = "2021/FreeSans.ttf",
+  bold = "2021/FreeSansBold.ttf"
 )
 
 
@@ -208,19 +208,24 @@ p <- ggplot(b_end) +
   ) +
   geom_text_repel(
     data = scale_point_labs_df, aes(X, Y * 1.07,
-                                    label = dist,
-                                    segment.color = "transparent"
+      label = dist,
+      segment.color = "transparent"
     ),
     size = 10, color = "white",
     direction = "y",
     seed = 3
   ) +
   # Background
-  geom_sf(fill = "#05050f", col = "grey20", size = 1) +
-  geom_sf(data = ant_end, fill = "#2a3354", col = NA) +
+  geom_sf(fill = "#05050f", col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
   # Tile
   layer_spatial(tile_end) +
-  #  geom_sf(data=coast_end, fill=NA, col=adjustcolor("grey90", alpha.f = 0.5)) +
+  # Coasts
+  geom_sf(data = coast_end, fill = NA, col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
+  # Antarctica
+  geom_sf(
+    data = ant_end, fill = "#2a3354", col = adjustcolor("white", alpha.f = 0.1), size = 0.3,
+    alpha = 0.8
+  ) +
   # Graticules
   geom_sf(data = grat_end, color = "white", alpha = 0.1, size = 0.3) +
   geom_sf(data = dateline, color = "yellow", alpha = 0.3, size = 1, linetype = "dotted") +
@@ -265,5 +270,5 @@ p <- ggplot(b_end) +
 
 
 ggsave("2021/day28_rounded_earth.png", p,
-       height = 9, width = 8, dpi = 300, bg = "black"
+  height = 9, width = 8, dpi = 300, bg = "black"
 )
