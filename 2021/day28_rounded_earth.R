@@ -118,21 +118,34 @@ library(terra)
 # download.file("https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_01deg_geo.tif",
 #               "2021/BlackMarble_2016_01deg_geo.tif",
 #               mode = "wb")
-
+# This takes a lot of time, so saving it on disk
 tile <- rast("2021/BlackMarble_2016_01deg_geo.tif")
-# Use original file with
-# tile_end <- project(tile, st_crs(proj4)$proj4string)
 
-# Modified png with GIMP
-# This is because I want more contrast in this specific file
-tile_mod_gimp <- rast("2021/BlackMarble_2016_01deg_geo_mod.png")
+# Simplify a bit the raster
+tile <- aggregate(tile, fact = 2)
 
 
-# Transfer new colors to a new raster
-tile_newcol <- tile
-values(tile_newcol) <- values(tile_mod_gimp)
+adjust_cols <- function(rgb, s = .5, l = .1) {
+  hsl <- plotwidgets::rgb2hsl(as.matrix(rgb))
+  hsl[2, ] <- max(min(1, hsl[2, ] * (1 + s)), 0)
+  hsl[3, ] <- max(min(1, hsl[3, ] * (1 + l)), 0)
 
-tile_end <- project(tile_newcol, st_crs(proj4)$proj4string)
+
+
+  rgb_new <- as.vector(t(plotwidgets::hsl2rgb(hsl)))
+
+  return(rgb_new)
+}
+
+
+newtile <- app(tile, cores = parallel::detectCores(), fun = adjust_cols, -.5, 1)
+plotRGB(newtile)
+
+writeRaster(newtile, "2021/BlackMarbleMod.tif", overwrite = TRUE)
+
+newtile_disk <- rast("2021/BlackMarbleMod.tif")
+tile_end <- project(newtile_disk, st_crs(proj4)$proj4string)
+plotRGB(tile_end)
 
 # End mod
 
@@ -232,14 +245,14 @@ p <- ggplot(b_end) +
     seed = 3
   ) +
   # Background
-  geom_sf(fill = "#101228", col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
+  geom_sf(fill = "#0d0e18", col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
   # Tile
   layer_spatial(tile_end) +
   # Coasts
   geom_sf(data = coast_end, fill = NA, col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
   # Antarctica
   geom_sf(
-    data = ant_end, fill = "#6576c0", col = NA
+    data = ant_end, fill = "#38344a", col = NA
   ) +
   # Graticules
   geom_sf(data = grat_end, color = "white", alpha = 0.1, size = 0.3) +
