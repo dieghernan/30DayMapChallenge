@@ -6,6 +6,8 @@ library(nominatimlite)
 library(geosphere)
 library(ggplot2)
 library(ggrepel)
+library(plotwidgets)
+
 
 # Dev version
 remotes::install_github("paleolimbot/ggspatial")
@@ -118,7 +120,21 @@ library(terra)
 #               mode = "wb")
 
 tile <- rast("2021/BlackMarble_2016_01deg_geo.tif")
-tile_end <- project(tile, st_crs(proj4)$proj4string)
+# Use original file with
+# tile_end <- project(tile, st_crs(proj4)$proj4string)
+
+# Modified png with GIMP
+# This is because I want more contrast in this specific file
+tile_mod_gimp <- rast("2021/BlackMarble_2016_01deg_geo_mod.png")
+
+
+# Transfer new colors to a new raster
+tile_newcol <- tile
+values(tile_newcol) <- values(tile_mod_gimp)
+
+tile_end <- project(tile_newcol, st_crs(proj4)$proj4string)
+
+# End mod
 
 
 # Get labels of airports
@@ -216,19 +232,18 @@ p <- ggplot(b_end) +
     seed = 3
   ) +
   # Background
-  geom_sf(fill = "#05050f", col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
+  geom_sf(fill = "#101228", col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
   # Tile
   layer_spatial(tile_end) +
   # Coasts
   geom_sf(data = coast_end, fill = NA, col = adjustcolor("white", alpha.f = 0.1), size = 0.3) +
   # Antarctica
   geom_sf(
-    data = ant_end, fill = "#2a3354", col = adjustcolor("white", alpha.f = 0.1), size = 0.3,
-    alpha = 0.8
+    data = ant_end, fill = "#6576c0", col = NA
   ) +
   # Graticules
   geom_sf(data = grat_end, color = "white", alpha = 0.1, size = 0.3) +
-  geom_sf(data = dateline, color = "yellow", alpha = 0.3, size = 1, linetype = "dotted") +
+  geom_sf(data = dateline, color = "yellow", alpha = 0.6, size = 1, linetype = "dotted") +
   # Flighs
   geom_sf(data = lines_end, color = "#0033ff", alpha = .5, size = 4) +
   geom_sf(data = labs_end, color = "#0033ff", shape = 21, fill = "#ccd6ff", size = 5, alpha = 0.4) +
@@ -239,7 +254,7 @@ p <- ggplot(b_end) +
   ) +
   geom_text(
     data = lab_dateline_end, aes(X, Y, label = text),
-    color = "yellow", size = 9, alpha = 0.5,
+    color = "yellow", size = 9, alpha = 0.7,
     hjust = 1,
     nudge_x = -100000,
     angle = -2
